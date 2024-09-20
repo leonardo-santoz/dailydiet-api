@@ -6,7 +6,6 @@ import { FastifyInstance } from 'fastify'
 
 export async function userRoutes(app: FastifyInstance) {
   app.post('/register', async (request, reply) => {
-    console.log('body', request.body)
     const userSchema = z.object({
       fullName: z.string(),
       email: z.string(),
@@ -15,7 +14,7 @@ export async function userRoutes(app: FastifyInstance) {
 
     const { fullName, email, password } = userSchema.parse(request.body)
 
-    const hashedPassword = bcrypt.hash(password, 5)
+    const hashedPassword = bcrypt.hashSync(password, 5)
 
     await knex('users').insert({
       id: randomUUID(),
@@ -25,5 +24,11 @@ export async function userRoutes(app: FastifyInstance) {
     })
 
     return reply.status(201).send()
+  })
+
+  app.get('/', async () => {
+    const users = await knex('users').select()
+
+    return { users }
   })
 }
