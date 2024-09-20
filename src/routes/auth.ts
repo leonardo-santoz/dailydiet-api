@@ -21,7 +21,10 @@ export async function authRoutes(app: FastifyInstance) {
     if (!passwordIsValid)
       return reply.status(404).send({ error: 'User or e-mail is invalid' })
 
-    const token = app.jwt.sign({ userId: user.id }, { expiresIn: '1h' })
+    const token = app.jwt.sign(
+      { userId: user.id, level: user.level },
+      { expiresIn: '1h' }
+    )
 
     return { token }
   })

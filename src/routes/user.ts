@@ -4,15 +4,18 @@ import bcrypt from 'bcryptjs'
 import { randomUUID } from 'node:crypto'
 import { FastifyInstance } from 'fastify'
 
+import { checkIfIsAdmin } from '../middlewares/check-if-is-admin'
+
 export async function userRoutes(app: FastifyInstance) {
   app.post('/register', async (request, reply) => {
     const userSchema = z.object({
       fullName: z.string(),
       email: z.string(),
       password: z.string(),
+      level: z.enum(['customer', 'admin']),
     })
 
-    const { fullName, email, password } = userSchema.parse(request.body)
+    const { fullName, email, password, level } = userSchema.parse(request.body)
 
     const hashedPassword = bcrypt.hashSync(password, 5)
 
@@ -21,20 +24,25 @@ export async function userRoutes(app: FastifyInstance) {
       fullName,
       email,
       password: hashedPassword,
+      level,
     })
 
     return reply.status(201).send()
   })
 
-  app.get('/', { preValidation: [app.authenticate] }, async () => {
-    const users = await knex('users').select()
+  app.get(
+    '/',
+    { preValidation: [app.authenticate, checkIfIsAdmin] },
+    async () => {
+      const users = await knex('users').select()
 
-    return { users }
-  })
+      return { users }
+    }
+  )
 
   app.delete(
     '/:id',
-    { preValidation: [app.authenticate] },
+    { preValidation: [app.authenticate, checkIfIsAdmin] },
     async (request, reply) => {
       const deleteUserParamsSchema = z.object({
         id: z.string().uuid(),
