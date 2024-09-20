@@ -26,21 +26,25 @@ export async function userRoutes(app: FastifyInstance) {
     return reply.status(201).send()
   })
 
-  app.get('/', async () => {
+  app.get('/', { preValidation: [app.authenticate] }, async () => {
     const users = await knex('users').select()
 
     return { users }
   })
 
-  app.delete('/:id', async (request, reply) => {
-    const deleteUserParamsSchema = z.object({
-      id: z.string().uuid(),
-    })
+  app.delete(
+    '/:id',
+    { preValidation: [app.authenticate] },
+    async (request, reply) => {
+      const deleteUserParamsSchema = z.object({
+        id: z.string().uuid(),
+      })
 
-    const { id } = deleteUserParamsSchema.parse(request.params)
+      const { id } = deleteUserParamsSchema.parse(request.params)
 
-    await knex('users').where('id', id).delete()
+      await knex('users').where('id', id).delete()
 
-    return reply.status(200).send()
-  })
+      return reply.status(200).send()
+    }
+  )
 }
