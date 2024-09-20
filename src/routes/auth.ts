@@ -1,12 +1,10 @@
 import { knex } from '../database'
 import { z } from 'zod'
-import { env } from '../env'
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
 import { FastifyInstance } from 'fastify'
 
 export async function authRoutes(app: FastifyInstance) {
-  app.post('/login', async (request) => {
+  app.post('/login', async (request, reply) => {
     const authLoginSchema = z.object({
       email: z.string(),
       password: z.string(),
@@ -14,17 +12,16 @@ export async function authRoutes(app: FastifyInstance) {
 
     const { email, password } = authLoginSchema.parse(request.body)
 
-    const user = await knex('users').where('email', email).select()
+    const user = await knex('users').where('email', email).first()
 
-    if (!user) throw new Error('user not found')
+    if (!user) return reply.status(404).send({ error: 'User not found' })
 
     const passwordIsValid = await bcrypt.compare(password, user.password)
 
-    if (!passwordIsValid) throw new Error('user or password is not valid')
+    if (!passwordIsValid)
+      return reply.status(404).send({ error: 'User or e-mail is invalid' })
 
-    const token = jwt.sign({ userId: user.id }, env.SECRET_KEY, {
-      expiresIn: '1h',
-    })
+    const token = app.jwt.sign({ userId: user.id }, { expiresIn: '1h' })
 
     return { token }
   })
