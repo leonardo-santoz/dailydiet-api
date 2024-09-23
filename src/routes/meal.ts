@@ -60,6 +60,37 @@ export async function mealRoutes(app: FastifyInstance) {
     return { meal }
   })
 
+  app.patch(
+    '/:id',
+    { preValidation: [app.authenticate] },
+    async (request, reply) => {
+      const updateMealSchema = z.object({
+        name: z.string(),
+        description: z.string(),
+        is_in_diet: z.boolean(),
+        time: z.string(), //TODO: convert to date
+      })
+
+      const { name, description, is_in_diet, time } = updateMealSchema.parse(
+        request.body
+      )
+
+      const { userId } = await request.jwtVerify<JwtPayload>()
+      const updated_at = new Date().toString() //TODO: review
+
+      await knex('meals').update({
+        name,
+        description,
+        is_in_diet,
+        time,
+        user_id: userId,
+        updated_at,
+      })
+
+      return reply.status(200).send()
+    }
+  )
+
   app.delete(
     '/:id',
     { preValidation: [app.authenticate] },
@@ -72,10 +103,7 @@ export async function mealRoutes(app: FastifyInstance) {
 
       const { userId } = await request.jwtVerify<JwtPayload>()
 
-      const meals = await knex('meals')
-        .where('user_id', userId)
-        .andWhere('id', id)
-        .delete()
+      await knex('meals').where('user_id', userId).andWhere('id', id).delete()
 
       return reply.status(200).send()
     }
