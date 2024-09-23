@@ -1,6 +1,5 @@
 import { knex } from '../database'
 import { z } from 'zod'
-import bcrypt from 'bcryptjs'
 import { randomUUID } from 'node:crypto'
 import { FastifyInstance } from 'fastify'
 import { JwtPayload } from 'jsonwebtoken'
@@ -21,7 +20,7 @@ export async function mealRoutes(app: FastifyInstance) {
         request.body
       )
 
-      const contextUser = await request.jwtVerify<JwtPayload>()
+      const { userId } = await request.jwtVerify<JwtPayload>()
 
       await knex('meals').insert({
         id: randomUUID(),
@@ -29,22 +28,39 @@ export async function mealRoutes(app: FastifyInstance) {
         description,
         is_in_diet,
         time,
-        user_id: contextUser.userId,
+        user_id: userId,
       })
 
       return reply.status(201).send()
     }
   )
 
-  app.get(
-    '/',
+  app.get('/', { preValidation: [app.authenticate] }, async (request) => {
+    const { userId } = await request.jwtVerify<JwtPayload>()
+
+    const meals = await knex('meals').where('user_id', userId).select()
+
+    return { meals }
+  })
+
+  app.delete(
+    '/:id',
     { preValidation: [app.authenticate] },
-    async (request) => {
+    async (request, reply) => {
+      const deleteMealSchema = await z.object({
+        id: z.string().uuid(),
+      })
+
+      const { id } = deleteMealSchema.parse(request.params)
+
       const { userId } = await request.jwtVerify<JwtPayload>()
 
-      const meals = await knex('meals').where('user_id', userId).select()
+      const meals = await knex('meals')
+        .where('user_id', userId)
+        .andWhere('id', id)
+        .delete()
 
-      return { meals }
+      return reply.status(200).send()
     }
   )
 }
