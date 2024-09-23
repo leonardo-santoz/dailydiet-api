@@ -22,9 +22,9 @@ export async function mealRoutes(app: FastifyInstance) {
       )
 
       const contextUser = await request.jwtVerify<JwtPayload>()
-      console.log({ contextUser })
 
       await knex('meals').insert({
+        id: randomUUID(),
         name,
         description,
         is_in_diet,
@@ -33,6 +33,18 @@ export async function mealRoutes(app: FastifyInstance) {
       })
 
       return reply.status(201).send()
+    }
+  )
+
+  app.get(
+    '/',
+    { preValidation: [app.authenticate] },
+    async (request) => {
+      const { userId } = await request.jwtVerify<JwtPayload>()
+
+      const meals = await knex('meals').where('user_id', userId).select()
+
+      return { meals }
     }
   )
 }
