@@ -71,6 +71,18 @@ export async function mealRoutes(app: FastifyInstance) {
     return mealsCount
   })
 
+  app.get('/countInDiet', { preValidation: [app.authenticate] }, async (request) => {
+    const { userId } = await request.jwtVerify<JwtPayload>()
+
+    const mealsCount = await knex('meals')
+      .where('user_id', userId)
+      .andWhere('is_in_diet', true)
+      .count({ count: '*'})
+      .first()
+
+    return mealsCount
+  })
+
   app.patch(
     '/:id',
     { preValidation: [app.authenticate] },
