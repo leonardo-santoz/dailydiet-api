@@ -65,23 +65,43 @@ export async function mealRoutes(app: FastifyInstance) {
 
     const mealsCount = await knex('meals')
       .where('user_id', userId)
-      .count({ count: '*'})
+      .count({ count: '*' })
       .first()
 
     return mealsCount
   })
 
-  app.get('/countInDiet', { preValidation: [app.authenticate] }, async (request) => {
-    const { userId } = await request.jwtVerify<JwtPayload>()
+  app.get(
+    '/countNotInDiet',
+    { preValidation: [app.authenticate] },
+    async (request) => {
+      const { userId } = await request.jwtVerify<JwtPayload>()
 
-    const mealsCount = await knex('meals')
-      .where('user_id', userId)
-      .andWhere('is_in_diet', true)
-      .count({ count: '*'})
-      .first()
+      const mealsCount = await knex('meals')
+        .where('user_id', userId)
+        .andWhere('is_in_diet', false)
+        .count({ count: '*' })
+        .first()
 
-    return mealsCount
-  })
+      return mealsCount
+    }
+  )
+
+  app.get(
+    '/countInDiet',
+    { preValidation: [app.authenticate] },
+    async (request) => {
+      const { userId } = await request.jwtVerify<JwtPayload>()
+
+      const mealsCount = await knex('meals')
+        .where('user_id', userId)
+        .andWhere('is_in_diet', true)
+        .count({ count: '*' })
+        .first()
+
+      return mealsCount
+    }
+  )
 
   app.patch(
     '/:id',
