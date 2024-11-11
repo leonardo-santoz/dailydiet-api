@@ -39,7 +39,7 @@ A **Daily Diet API** foi projetada para ajudar os usuários a monitorarem sua al
 ## Tecnologias Utilizadas
 
 - **Node.js**: Plataforma utilizada para desenvolvimento da API.
-- **Express/Fastify**: Framework para criação e gerenciamento das rotas.
+- **Fastify**: Framework para criação e gerenciamento das rotas.
 - **JWT**: Para autenticação e controle de acesso dos usuários.
 - **SQLite**: Banco de dados utilizado para persistência dos dados.
   
