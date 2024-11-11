@@ -47,7 +47,7 @@ A **Daily Diet API** foi projetada para ajudar os usuários a monitorarem sua al
 
 1. **Clone o Repositório**:
    ```bash
-   git clone <URL-do-Repositório>
+   git clone https://github.com/leonardo-santoz/dailydiet-api.git
 
 2. **Instale as dependências**:
    ```bash
